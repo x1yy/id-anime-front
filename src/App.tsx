@@ -1,24 +1,34 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route
+} from 'react-router-dom';
+
+import { Navbar } from 'rbx';
+import 'rbx/index.css';
+
+import { AnimeCollection } from './AnimeCollection';
+import AnimeStreaming from './AnimeStreaming';
+import EpisodeStreaming from './EpisodeStreaming';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Navbar>
+        <Navbar.Brand>
+          <Navbar.Item href='/'>
+            id-anime
+          </Navbar.Item>
+        </Navbar.Brand>
+      </Navbar>
+      <Router>
+        <Switch>
+          <Route exact path='/' component={AnimeCollection} />
+          <Route path='/animes/:animeId' component={AnimeStreaming} />
+          <Route path='/animes/:animeId/episodes/:episodeId' component={EpisodeStreaming} />
+        </Switch>
+      </Router>
     </div>
   );
 }
