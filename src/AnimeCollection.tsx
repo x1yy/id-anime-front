@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Container, Card, Image, Column, PageLoader, Title
+  Container, Card, Image, Column, PageLoader, Pagination, Title
 } from 'rbx';
+import * as queryString from 'query-string';
 
 import './App.css';
 
@@ -21,7 +22,7 @@ interface IState {
 export class AnimeCollection extends React.Component<any, IState> {
 
   state = {
-    collection: '',
+    collection: {},
     items: [{
       id: 0,
       coverLink: '#',
@@ -37,11 +38,21 @@ export class AnimeCollection extends React.Component<any, IState> {
       coverLink: '#',
       title: '#'
     }];
+    this.state.collection = {
+      items: [],
+      meta: {},
+      links: {}
+    };
     this.state.isLoading = true;
   }
 
   componentDidMount() {
-    window.fetch('https://api.id-anime.net/v1/animes')
+    let link = 'https://api.id-anime.net/v1/animes';
+    if (this.props.location.search) {
+      const qs = queryString.parse(this.props.location.search);
+      link = `https://api.id-anime.net/v1/animes?page=${qs.page}&limit=12`;
+    }
+    window.fetch(link)
       .then((response: any) => {
         response.json().then((data: any) => {
           console.log(data);
@@ -57,6 +68,18 @@ export class AnimeCollection extends React.Component<any, IState> {
   render() {
     const collections = this.state.items;
 
+    let previousLink = '';
+    // @ts-ignore
+    if (this.state.collection.links.previous) {
+      // @ts-ignore
+      const previousPage = parseInt(this.state.collection.meta.currentPage) - 1;
+      previousLink = `/?page=${previousPage}`;
+    }
+
+    // @ts-ignore
+    let nextPage = parseInt(this.state.collection.meta.currentPage) + 1;
+    let nextLink = `/?page=${nextPage}`;
+
     return (
       <div className='body-container'>
         <Container>
@@ -65,7 +88,12 @@ export class AnimeCollection extends React.Component<any, IState> {
                 <Title>Loading ...</Title>
               </PageLoader> : collections.map(collection => (
               <Column size='one-quarter' key={collection.id}>
-                <Link to={'/animes/' + collection.id}>
+                <Link to={{
+                  pathname: '/animes/' + collection.id,
+                  state: {
+                    anime: collection
+                  }
+                }}>
                   <Card>
                     <Card.Image>
                       <Image.Container size='3by4'>
@@ -79,6 +107,16 @@ export class AnimeCollection extends React.Component<any, IState> {
                 </Link>
               </Column>
             ))}
+
+            <Column>
+              <Pagination align='centered'>
+                <Pagination.Step align='previous' href={previousLink}>sebelumnya</Pagination.Step>
+                <Pagination.Step align='next' href={nextLink}>selanjutnya</Pagination.Step>
+                <Pagination.List>
+                  <Pagination.Link>1</Pagination.Link>
+                </Pagination.List>
+              </Pagination>
+            </Column>
           </Column.Group>
         </Container>
       </div>

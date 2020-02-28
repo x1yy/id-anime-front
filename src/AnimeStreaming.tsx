@@ -1,11 +1,15 @@
 import React from 'react';
-import { withRouter, Link } from 'react-router-dom'
+import { withRouter, Link, Redirect } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router';
 
 import { Column, List, Title, PageLoader } from 'rbx';
 
 interface AnimeId {
   animeId: string;
+}
+
+type LocationState = {
+  anime: any;
 }
 
 interface IEpisode {
@@ -18,7 +22,7 @@ interface IEpisode {
 
 interface ComponentProps extends RouteComponentProps<AnimeId> {}
 
-class AnimeStreaming extends React.Component<ComponentProps, IEpisode> {
+class AnimeStreaming extends React.Component<ComponentProps, IEpisode, LocationState> {
 
   constructor(props: any) {
     super(props);
@@ -51,12 +55,22 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode> {
   renderStreamingIframe(episodeIndex: number) {
     const animeEpisodes = this.state.items;
     return (
-      <iframe className='video-iframe' frameBorder={0} src={animeEpisodes[episodeIndex].link} allowFullScreen />
+      <iframe className='video-iframe' title='anime-streaming' frameBorder={0} src={animeEpisodes[episodeIndex].link} allowFullScreen />
     )
   }
 
   render() {
     const animeEpisodes = this.state.items;
+    let anime = {
+      title: ''
+    }
+
+    if ((typeof this.props.location.state == 'undefined') || (Object.keys(this.props.location.state).length === 0)) {
+      return (<Redirect to='/' />);
+    } else {
+      // @ts-ignore
+      anime = this.props.location.state.anime;
+    }
 
     return (
       <div className='body-container'>
@@ -64,15 +78,24 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode> {
           <Title>Loading ...</Title>
         </PageLoader> :
           <Column size='three-fifths' offset='one-fifth' height='380px'>
+            <Title size={3} as='h1'>{anime.title}</Title>
+            <Title size={4} as='h2'>Episode {animeEpisodes[0].episode}: {animeEpisodes[0].title}</Title>
+
             {this.renderStreamingIframe(0)}
 
             <br />
 
-            <Title size={4} as='h1'>Episode</Title>
+            <Title size={5} as='h3'>Episode</Title>
 
             <List>
               {animeEpisodes.map(episode => (
-                <Link to={'/animes/' + this.props.match.params.animeId + '/episodes/' + episode.id}><List.Item>Episode {episode.episode}</List.Item></Link>
+                <Link to={{
+                  pathname: '/animes/' + this.props.match.params.animeId + '/episodes/' + episode.id,
+                  state: {
+                    anime: anime,
+                    episode: episode
+                  }
+                }}><List.Item>Episode {episode.episode}</List.Item></Link>
               ))}
 
             </List>

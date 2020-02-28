@@ -25,8 +25,8 @@ function App() {
       <Router>
         <Switch>
           <Route exact path='/' component={AnimeCollection} />
-          <Route path='/animes/:animeId' component={AnimeStreaming} />
-          <Route path='/animes/:animeId/episodes/:episodeId' component={EpisodeStreaming} />
+          <Route exact path='/animes/:animeId' component={AnimeStreaming} />
+          <Route exact path='/animes/:animeId/episodes/:episodeId' component={EpisodeStreaming} />
         </Switch>
       </Router>
     </div>
