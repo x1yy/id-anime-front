@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Card, Image, Column } from 'rbx';
+import {
+  Container, Card, Image, Column, PageLoader, Title
+} from 'rbx';
 
 import './App.css';
 
@@ -13,6 +15,7 @@ interface IItem {
 interface IState {
   collection: any;
   items: IItem[];
+  isLoading: boolean;
 }
 
 export class AnimeCollection extends React.Component<any, IState> {
@@ -23,7 +26,8 @@ export class AnimeCollection extends React.Component<any, IState> {
       id: 0,
       coverLink: '#',
       title: '#'
-    }]
+    }],
+    isLoading: true
   }
 
   constructor(props: any) {
@@ -33,6 +37,7 @@ export class AnimeCollection extends React.Component<any, IState> {
       coverLink: '#',
       title: '#'
     }];
+    this.state.isLoading = true;
   }
 
   componentDidMount() {
@@ -43,6 +48,7 @@ export class AnimeCollection extends React.Component<any, IState> {
           this.setState({
             collection: data,
             items: data.items,
+            isLoading: false
           });
         });
       });
@@ -55,7 +61,9 @@ export class AnimeCollection extends React.Component<any, IState> {
       <div className='body-container'>
         <Container>
           <Column.Group vcentered multiline gapSize={8} className='anime-grid'>
-            {collections.map(collection => (
+            {this.state.isLoading ? <PageLoader color='light' active={this.state.isLoading}>
+                <Title>Loading ...</Title>
+              </PageLoader> : collections.map(collection => (
               <Column size='one-quarter' key={collection.id}>
                 <Link to={'/animes/' + collection.id}>
                   <Card>

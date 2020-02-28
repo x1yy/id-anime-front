@@ -17,6 +17,7 @@ interface IEpisode {
   synopsis: string;
   anime: any;
   indexFirstView: boolean;
+  isLoading: boolean;
 }
 
 interface ComponentProps extends RouteComponentProps<AnimeId> {}
@@ -35,6 +36,7 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
         items: []
       },
       indexFirstView: false,
+      isLoading: true
     }
   }
 
@@ -51,6 +53,7 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
             title: data.title,
             synopsis: data.synopsis,
             indexFirstView: true,
+            isLoading: false
           });
         });
       });
@@ -77,6 +80,9 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
     const animeEpisodes = this.state.anime.items;
     return (
       <div className='body-container'>
+        {this.state.isLoading ? <PageLoader color='light' active={this.state.isLoading}>
+          <Title>Loading ...</Title>
+        </PageLoader> :
         <Column size='three-fifths' offset='one-fifth' height='380px'>
           {this.renderStreamingIframe()}
 
@@ -91,6 +97,7 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
 
           </List>
         </Column>
+        }
       </div>
     )
   }
