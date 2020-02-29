@@ -1,8 +1,9 @@
 import React from 'react';
 import { withRouter, Link } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router';
+import * as queryString from 'query-string';
 
-import { Column, List, Title, PageLoader } from 'rbx';
+import { Column, List, Title, PageLoader, Pagination } from 'rbx';
 
 interface AnimeId {
   animeId: string;
@@ -49,7 +50,9 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
         coverLink: ''
       },
       animeEpisodes: {
-        items: []
+        items: [],
+        meta: {},
+        links: {}
       },
       indexFirstView: false,
       isLoading: true
@@ -109,7 +112,12 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
       }
 
       const animeId = this.props.match.params.animeId;
-      window.fetch(`https://api.id-anime.net/v1/animes/${animeId}/episodes`)
+      let link = `https://api.id-anime.net/v1/animes/${animeId}/episodes`;
+      if (this.props.location.search) {
+        const qs = queryString.parse(this.props.location.search);
+        link = `https://api.id-anime.net/v1/animes/${animeId}/episodes?page=${qs.page}&limit=12`;
+      }
+      window.fetch(link)
         .then((response: any) => {
           response.json().then((data: any) => {
             console.log(data);
@@ -130,6 +138,21 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
 
   render() {
     const animeEpisodes = this.state.animeEpisodes.items;
+
+    const animeId = this.props.match.params.animeId;
+    const episodeId = this.props.match.params.episodeId;
+    let previousLink = '';
+    // @ts-ignore
+    if (this.state.animeEpisodes.links.previous) {
+      // @ts-ignore
+      const previousPage = parseInt(this.state.animeEpisodes.meta.currentPage) - 1;
+      previousLink = `/animes/${animeId}/episodes/${episodeId}?page=${previousPage}`;
+    }
+
+    // @ts-ignore
+    let nextPage = parseInt(this.state.animeEpisodes.meta.currentPage) + 1;
+    let nextLink = `/animes/${animeId}/episodes/${episodeId}?page=${nextPage}`;
+
     return (
       <div className='body-container'>
         {this.state.isLoading ? <PageLoader color='light' active={this.state.isLoading}>
@@ -157,7 +180,12 @@ class EpisodeStreaming extends React.Component<ComponentProps, IEpisode> {
               }}
               ><List.Item>Episode {episode.episode}</List.Item></Link>
             ))}
-
+            <List.Item>
+              <Pagination align='centered'>
+                <Pagination.Step align='previous' href={previousLink}>sebelumnya</Pagination.Step>
+                <Pagination.Step align='next' href={nextLink}>selanjutnya</Pagination.Step>
+              </Pagination>
+            </List.Item>
           </List>
         </Column>
         }

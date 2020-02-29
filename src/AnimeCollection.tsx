@@ -112,9 +112,6 @@ export class AnimeCollection extends React.Component<any, IState> {
               <Pagination align='centered'>
                 <Pagination.Step align='previous' href={previousLink}>sebelumnya</Pagination.Step>
                 <Pagination.Step align='next' href={nextLink}>selanjutnya</Pagination.Step>
-                <Pagination.List>
-                  <Pagination.Link>1</Pagination.Link>
-                </Pagination.List>
               </Pagination>
             </Column>
           </Column.Group>

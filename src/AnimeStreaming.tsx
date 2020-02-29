@@ -1,8 +1,9 @@
 import React from 'react';
 import { withRouter, Link, Redirect } from 'react-router-dom'
 import { RouteComponentProps } from 'react-router';
+import * as queryString from 'query-string';
 
-import { Column, List, Title, PageLoader } from 'rbx';
+import { Column, List, Title, PageLoader, Pagination } from 'rbx';
 
 interface AnimeId {
   animeId: string;
@@ -13,6 +14,8 @@ type LocationState = {
 }
 
 interface IEpisode {
+  anime: any;
+  data: any;
   items: Array<any>;
   meta: Array<any>;
   links: Array<any>;
@@ -27,6 +30,12 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode, LocationS
   constructor(props: any) {
     super(props);
     this.state = {
+      anime: {},
+      data: {
+        meta: {},
+        items: [],
+        links: {},
+      },
       items: [{
         link: '#'
       }],
@@ -34,16 +43,45 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode, LocationS
       links: [],
       indexFirstView: false,
       isLoading: true,
-    }
+    };
   }
 
   componentDidMount() {
+    if (typeof this.props.location.state == 'undefined') {
+      const animeId = this.props.match.params.animeId;
+      window.fetch(`https://api.id-anime.net/v1/animes/${animeId}`)
+        .then((response: any) => {
+          response.json().then((data: any) => {
+            this.setState({
+              anime: {
+                id: data.id,
+                title: data.title,
+                synopsis: data.synopsis,
+                metaDescription: data.metaDescription,
+                coverLink: data.coverLink
+              }
+            });
+          });
+        });
+    } else {
+      // @ts-ignore
+      const anime = this.props.location.state.anime;
+
+      this.setState({anime: anime});
+    }
+
     const animeId = this.props.match.params.animeId;
-    window.fetch(`https://api.id-anime.net/v1/animes/${animeId}/episodes`)
+    let link = `https://api.id-anime.net/v1/animes/${animeId}/episodes`;
+    if (this.props.location.search) {
+      const qs = queryString.parse(this.props.location.search);
+      link = `https://api.id-anime.net/v1/animes/${animeId}/episodes?page=${qs.page}&limit=12`;
+    }
+    window.fetch(link)
       .then((response: any) => {
         response.json().then((data: any) => {
           console.log(data);
           this.setState({
+            data: data,
             items: data.items,
             indexFirstView: true,
             isLoading: false,
@@ -61,16 +99,20 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode, LocationS
 
   render() {
     const animeEpisodes = this.state.items;
-    let anime = {
-      title: ''
+    const anime = this.state.anime;
+
+    const animeId = this.props.match.params.animeId;
+    let previousLink = '';
+    // @ts-ignore
+    if (this.state.data.links.previous) {
+      // @ts-ignore
+      const previousPage = parseInt(this.state.data.meta.currentPage) - 1;
+      previousLink = `/animes/${animeId}?page=${previousPage}`;
     }
 
-    if ((typeof this.props.location.state == 'undefined') || (Object.keys(this.props.location.state).length === 0)) {
-      return (<Redirect to='/' />);
-    } else {
-      // @ts-ignore
-      anime = this.props.location.state.anime;
-    }
+    // @ts-ignore
+    let nextPage = parseInt(this.state.data.meta.currentPage) + 1;
+    let nextLink = `/animes/${animeId}?page=${nextPage}`;
 
     return (
       <div className='body-container'>
@@ -97,7 +139,12 @@ class AnimeStreaming extends React.Component<ComponentProps, IEpisode, LocationS
                   }
                 }}><List.Item>Episode {episode.episode}</List.Item></Link>
               ))}
-
+              <List.Item>
+                <Pagination align='centered'>
+                  <Pagination.Step align='previous' href={previousLink}>sebelumnya</Pagination.Step>
+                  <Pagination.Step align='next' href={nextLink}>selanjutnya</Pagination.Step>
+                </Pagination>
+              </List.Item>
             </List>
           </Column>
         }
